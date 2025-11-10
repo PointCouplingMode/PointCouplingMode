@@ -1,4 +1,4 @@
-#weight = "/home/oem/Pycharm_Pytorch_Projects/PointTransformer/Pointcept-main/tools/exp/default/model/model_best(me).pth" # path to model weight
+# weight = "/home/oem/Pycharm_Pytorch_Projects/PointTransformer/Pointcept-main/tools/exp/default/model/model_best(me).pth" # path to model weight
 weight = None
 resume = False  # whether to resume training process
 evaluate = True  # evaluate after each epoch training process
@@ -10,8 +10,8 @@ num_worker = 1  # total worker in all gpu
 batch_size = 1  # total batch size in all gpu
 batch_size_val = None  # auto adapt to bs 1 for each gpu
 batch_size_test = None  # auto adapt to bs 1 for each gpu
-epoch =1 # total epoch, data loop = epoch // eval_epoch
-eval_epoch = 1# sche total eval & checkpoint epoch
+epoch = 1  # total epoch, data loop = epoch // eval_epoch
+eval_epoch = 1  # sche total eval & checkpoint epoch
 
 sync_bn = False
 enable_amp = False

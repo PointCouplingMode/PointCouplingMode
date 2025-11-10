@@ -105,6 +105,7 @@ def vertex_normal(vertex, face):
     nv = nv / length
     return nv
 
+
 def handle_process(
     scene_path, output_path, labels_pd, train_scenes, val_scenes, parse_normals=True
 ):
@@ -114,7 +115,9 @@ def handle_process(
         segments_file = os.path.join(
             scene_path, f"{scene_id}{CLOUD_FILE_PFIX}{SEGMENTS_FILE_PFIX}"
         )
-        aggregations_file = os.path.join(scene_path, f"{scene_id}{AGGREGATIONS_FILE_PFIX}")
+        aggregations_file = os.path.join(
+            scene_path, f"{scene_id}{AGGREGATIONS_FILE_PFIX}"
+        )
         info_file = os.path.join(scene_path, f"{scene_id}.txt")
 
         # ---------- 缺失文件检查 ----------
@@ -203,6 +206,7 @@ def handle_process(
 
     except Exception as e:
         print(f"[ERROR] Scene {os.path.basename(scene_path)} unexpected error - {e}")
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

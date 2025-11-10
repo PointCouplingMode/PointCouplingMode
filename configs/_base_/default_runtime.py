@@ -1,9 +1,9 @@
 # # weight = "/home/oem/Pycharm_Pytorch_Projects/PointTransformer/Pointcept-main/tools/exp/default/model_1/model_best(me).pth" # path to model weight
 weight = None
-resume =False # whether to resume training process
+resume = False  # whether to resume training process
 
 evaluate = True  # evaluate after each epoch training process
-test_only = False # test process
+test_only = False  # test process
 
 seed = None  # train process will init a random seed and record
 save_path = "exp/default"
@@ -11,13 +11,12 @@ num_worker = 1  # total worker in all gpu
 batch_size = 1  # total batch size in all gpu
 batch_size_val = 1  # auto adapt to bs 1 for each gpu
 batch_size_test = 1  # auto adapt to bs 1 for each gpu
-epoch =3000 #total epoch, data loop = epoch // eval_epoch
-eval_epoch = 3000# sche total eval & checkpoint epoch
+epoch = 3000  # total epoch, data loop = epoch // eval_epoch
+eval_epoch = 3000  # sche total eval & checkpoint epoch
 clip_grad = None
 
 sync_bn = False
 enable_amp = False
-
 
 
 empty_cache = False

@@ -3,6 +3,7 @@ import os
 
 os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "max_split_size_mb:128"
 import os
+
 os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
 import torch
 from pointcept.engines.defaults import (
@@ -14,14 +15,17 @@ from pointcept.engines.train import TRAINERS
 from pointcept.engines.launch import launch
 
 import torch, gc
+
 gc.collect()
 torch.cuda.empty_cache()
 torch.cuda.reset_peak_memory_stats()
 
 import os
-os.environ['CUDA_LAUNCH_BLOCKING'] = "1"
+
+os.environ["CUDA_LAUNCH_BLOCKING"] = "1"
 torch.backends.cudnn.enabled = True
 torch.backends.cudnn.benchmark = True
+
 
 def main_worker(cfg):
     cfg = default_setup(cfg)
@@ -29,7 +33,6 @@ def main_worker(cfg):
     trainer = TRAINERS.build(dict(type=cfg.train.type, cfg=cfg))
 
     trainer.train()
-
 
 
 def main():
@@ -44,10 +47,7 @@ def main():
         machine_rank=args.machine_rank,
         dist_url=args.dist_url,
         cfg=(cfg,),
-
     )
-
-
 
     print(f"GPU memory allocated: {torch.cuda.memory_allocated() / 1024 ** 3:.2f} GB")
     print(f"GPU memory reserved: {torch.cuda.memory_reserved() / 1024 ** 3:.2f} GB")

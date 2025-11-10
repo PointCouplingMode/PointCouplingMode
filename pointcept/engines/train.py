@@ -42,7 +42,7 @@ class TrainerBase:
         self.max_epoch = 0
         self.max_iter = 0
         self.comm_info = dict()
-#初始化一个空字典 self.comm_info，用于存储训练过程中需要跨方法传递的信息，例如当前迭代的输入数据、模型输出等。
+        # 初始化一个空字典 self.comm_info，用于存储训练过程中需要跨方法传递的信息，例如当前迭代的输入数据、模型输出等。
         self.data_iterator: Iterator = enumerate([])
         self.storage: EventStorage
         self.writer: SummaryWriter
@@ -121,33 +121,33 @@ class Trainer(TrainerBase):
         self.epoch = 0
         self.start_epoch = 0
         self.max_epoch = cfg.eval_epoch
-        #设置最大训练 epoch 数为 cfg.eval_epoch
+        # 设置最大训练 epoch 数为 cfg.eval_epoch
         self.best_metric_value = -torch.inf
-        #初始化最佳指标值为负无穷，用于记录训练过程中最佳的验证指标
+        # 初始化最佳指标值为负无穷，用于记录训练过程中最佳的验证指标
         self.logger = get_root_logger(
             log_file=os.path.join(cfg.save_path, "train.csv"),
             file_mode="a" if cfg.resume else "w",
         )
-        #初始化日志记录器：
-        #日志文件路径为 cfg.save_path/train.log。
-        #如果 cfg.resume 为 True，则以追加模式（"a"）打开日志文件；否则以写入模式（"w"）打开。
+        # 初始化日志记录器：
+        # 日志文件路径为 cfg.save_path/train.log。
+        # 如果 cfg.resume 为 True，则以追加模式（"a"）打开日志文件；否则以写入模式（"w"）打开。
         self.logger.info("=> Loading config ...")
-        #记录日志，表示正在加载配置
+        # 记录日志，表示正在加载配置
         self.cfg = cfg
-        #将传入的配置对象 cfg 赋值给类的成员变量 self.cfg
+        # 将传入的配置对象 cfg 赋值给类的成员变量 self.cfg
         self.logger.info(f"Save path: {cfg.save_path}")
-        #记录保存路径
+        # 记录保存路径
         self.logger.info(f"Config:\n{cfg.pretty_text}")
-        #记录配置的详细内容。
+        # 记录配置的详细内容。
         self.logger.info("=> Building model ...")
-        #记录日志，表示正在构建模型
+        # 记录日志，表示正在构建模型
         self.model = self.build_model()
         # 调用 build_model 方法构建模型，并将模型赋值给 self.model。
         # build_model 方法通常会根据配置 cfg 创建模型实例。
         self.logger.info("=> Building writer ...")
-        #记录日志，表示正在构建日志记录器
+        # 记录日志，表示正在构建日志记录器
         self.writer = self.build_writer()
-        #build_writer 方法通常会创建一个 SummaryWriter 实例，用于记录训练过程中的指标。
+        # build_writer 方法通常会创建一个 SummaryWriter 实例，用于记录训练过程中的指标。
         self.logger.info("=> Building train dataset & dataloader ...")
         self.train_loader = self.build_train_loader()
         self.logger.info("=> Building val dataset & dataloader ...")
@@ -165,88 +165,88 @@ class Trainer(TrainerBase):
             self.before_train()
             self.logger.info(">>>>>>>>>>>>>>>> Start Training >>>>>>>>>>>>>>>>")
             for self.epoch in range(self.start_epoch, self.max_epoch):
-                #当前 epoch 的索引，从 self.start_epoch 开始，到 self.max_epoch 结束。
+                # 当前 epoch 的索引，从 self.start_epoch 开始，到 self.max_epoch 结束。
                 # => before epoch
                 # TODO: optimize to iteration based
                 if comm.get_world_size() > 1:
                     self.train_loader.sampler.set_epoch(self.epoch)
                 self.model.train()
-                #将模型设置为训练模式，启用 Dropout 和 BatchNorm 等层
+                # 将模型设置为训练模式，启用 Dropout 和 BatchNorm 等层
                 self.data_iterator = enumerate(self.train_loader)
-                #创建一个迭代器，用于遍历训练数据加载器中的每个 batch
+                # 创建一个迭代器，用于遍历训练数据加载器中的每个 batch
                 self.before_epoch()
                 # => run_epoch
                 for (
                     self.comm_info["iter"],
                     self.comm_info["input_dict"],
                 ) in self.data_iterator:
-                #遍历每个 batch 的数据，self.comm_info["iter"] 是当前迭代的索引，self.comm_info["input_dict"] 是当前 batch 的输入数据。
+                    # 遍历每个 batch 的数据，self.comm_info["iter"] 是当前迭代的索引，self.comm_info["input_dict"] 是当前 batch 的输入数据。
                     # => before_step
                     self.before_step()
-                #调用 before_step 方法，执行每个迭代开始前的准备工作，例如记录日志、更新学习率等。
+                    # 调用 before_step 方法，执行每个迭代开始前的准备工作，例如记录日志、更新学习率等。
                     # => run_step
                     self.run_step()
-                #调用 run_step 方法，执行单个迭代的训练步骤，包括前向传播、计算损失、反向传播和优化器更新。
+                    # 调用 run_step 方法，执行单个迭代的训练步骤，包括前向传播、计算损失、反向传播和优化器更新。
                     # => after_step
                     self.after_step()
-                #调用 after_step 方法，执行每个迭代结束后的清理工作，例如记录日志、更新指标等
+                # 调用 after_step 方法，执行每个迭代结束后的清理工作，例如记录日志、更新指标等
                 # => after epoch
                 self.after_epoch()
-                #调用 after_epoch 方法，执行每个 epoch 结束后的清理工作，例如保存模型、评估验证集性能等。
+                # 调用 after_epoch 方法，执行每个 epoch 结束后的清理工作，例如保存模型、评估验证集性能等。
             # => after train
             self.after_train()
-            #调用 after_train 方法，执行训练结束后的清理工作，例如保存最终模型、关闭日志记录器等。
+            # 调用 after_train 方法，执行训练结束后的清理工作，例如保存最终模型、关闭日志记录器等。
 
     def run_step(self):
-        #这段代码定义了 Trainer 类的 run_step 方法，负责执行单个训练迭代的核心逻辑。
+        # 这段代码定义了 Trainer 类的 run_step 方法，负责执行单个训练迭代的核心逻辑。
         # 它包括数据准备、模型前向传播、损失计算、反向传播、优化器更新以及可选的混合精度训练
         input_dict = self.comm_info["input_dict"]
-        #获取当前迭代的输入数据字典 input_dict
+        # 获取当前迭代的输入数据字典 input_dict
         for key in input_dict.keys():
-            #遍历 input_dict 中的每个键
+            # 遍历 input_dict 中的每个键
             if isinstance(input_dict[key], torch.Tensor):
-                #检查当前键对应的值是否为 torch.Tensor 类型。
+                # 检查当前键对应的值是否为 torch.Tensor 类型。
                 input_dict[key] = input_dict[key].cuda(non_blocking=True)
-                #将张量移动到 GPU 上，使用 non_blocking=True 以非阻塞方式执行，提高效率
-#        with torch.cuda.amp.autocast(enabled=self.cfg.enable_amp):
-        with torch.amp.autocast(device_type='cuda', enabled=self.cfg.enable_amp):
-            #使用 torch.amp.autocast 上下文管理器启用混合精度训练（AMP）
-            #enabled=self.cfg.enable_amp 根据配置 self.cfg.enable_amp 决定是否启用混合精度训练。
+                # 将张量移动到 GPU 上，使用 non_blocking=True 以非阻塞方式执行，提高效率
+        #        with torch.cuda.amp.autocast(enabled=self.cfg.enable_amp):
+        with torch.amp.autocast(device_type="cuda", enabled=self.cfg.enable_amp):
+            # 使用 torch.amp.autocast 上下文管理器启用混合精度训练（AMP）
+            # enabled=self.cfg.enable_amp 根据配置 self.cfg.enable_amp 决定是否启用混合精度训练。
 
             output_dict = self.model(input_dict)
-            #将输入数据 input_dict 传递给模型，获取模型的输出 output_dict
+            # 将输入数据 input_dict 传递给模型，获取模型的输出 output_dict
             loss = output_dict["loss"]
-            #从模型输出中提取损失值 loss
+            # 从模型输出中提取损失值 loss
         self.optimizer.zero_grad()
-        #清零优化器中的梯度，防止梯度累积。
+        # 清零优化器中的梯度，防止梯度累积。
         if self.cfg.enable_amp:
-            #如果启用了混合精度训练：
+            # 如果启用了混合精度训练：
             self.scaler.scale(loss).backward()
-            #使用 GradScaler 对损失进行缩放并执行反向传播
+            # 使用 GradScaler 对损失进行缩放并执行反向传播
             self.scaler.step(self.optimizer)
-            #更新优化器，同时处理梯度缩放。
+            # 更新优化器，同时处理梯度缩放。
 
             # When enable amp, optimizer.step call are skipped if the loss scaling factor is too large.
             # Fix torch warning scheduler step before optimizer step.
             scaler = self.scaler.get_scale()
-            #获取当前的梯度缩放因子。
+            # 获取当前的梯度缩放因子。
             self.scaler.update()
-            #更新梯度缩放因子
+            # 更新梯度缩放因子
             if scaler <= self.scaler.get_scale():
                 self.scheduler.step()
-                #如果缩放因子没有变化，则调用学习率调度器的 step 方法。
-                #这是为了避免在梯度缩放因子过大时调用 optimizer.step，从而导致警告
+                # 如果缩放因子没有变化，则调用学习率调度器的 step 方法。
+                # 这是为了避免在梯度缩放因子过大时调用 optimizer.step，从而导致警告
         else:
             loss.backward()
             self.optimizer.step()
             self.scheduler.step()
-            #如果未启用混合精度训练：执行反向传播。更新优化器。调用学习率调度器的 step 方法。
+            # 如果未启用混合精度训练：执行反向传播。更新优化器。调用学习率调度器的 step 方法。
         if self.cfg.empty_cache:
-            #如果配置中启用了 empty_cache：
+            # 如果配置中启用了 empty_cache：
             torch.cuda.empty_cache()
-            #释放未使用的 GPU 缓存内存，以减少内存占用。
+            # 释放未使用的 GPU 缓存内存，以减少内存占用。
         self.comm_info["model_output_dict"] = output_dict
-        #将模型的输出字典 output_dict 保存到 self.comm_info 中，以便后续使用
+        # 将模型的输出字典 output_dict 保存到 self.comm_info 中，以便后续使用
 
     def after_epoch(self):
         for h in self.hooks:

@@ -80,8 +80,10 @@ def default_argument_parser(epilog=None):
     parser.add_argument(
         "--config-file",
         default="/home/oem/Pycharm_Pytorch_Projects/PointTransformer/Pointcept-main/configs/s3dis/s3dis_mamba_change_MLP.py/",
-        metavar="FILE", help="path to config file")
-        # ("--config-file", default="/home/oem/Pycharm_Pytorch_Projects/PointTransformer/Pointcept-main/configs/scannet/semseg-pt-v3m1-0-base.py/", metavar="FILE", help="path to config file")
+        metavar="FILE",
+        help="path to config file",
+    )
+    # ("--config-file", default="/home/oem/Pycharm_Pytorch_Projects/PointTransformer/Pointcept-main/configs/scannet/semseg-pt-v3m1-0-base.py/", metavar="FILE", help="path to config file")
 
     parser.add_argument(
         "--num-gpus", type=int, default=1, help="number of gpus *per machine*"
@@ -109,28 +111,30 @@ def default_argument_parser(epilog=None):
     parser.add_argument(
         "--options", nargs="+", action=DictAction, help="custom options"
     )
-    parser.add_argument("--vis_result",
-                        action="store_true",
-                        default=False,
-                        help="Enable visualization of prediction results")
+    parser.add_argument(
+        "--vis_result",
+        action="store_true",
+        default=False,
+        help="Enable visualization of prediction results",
+    )
     return parser
 
 
 def default_config_parser(file_path, options):
     file_path = file_path.rstrip(os.sep)
-    #移除路径末尾的系统路径分隔符（如 / 或 \），以避免后续处理中出现多余的分隔符
+    # 移除路径末尾的系统路径分隔符（如 / 或 \），以避免后续处理中出现多余的分隔符
     if os.path.isabs(file_path):
-        #检查 file_path 是否是绝对路径
+        # 检查 file_path 是否是绝对路径
         if os.path.isfile(file_path):
             return Config.fromfile(file_path)
-        #如果路径指向一个文件（文件存在），则直接使用 Config.fromfile 方法加载配置文件并返回
+        # 如果路径指向一个文件（文件存在），则直接使用 Config.fromfile 方法加载配置文件并返回
 
         possible_exts = [".py", ".yaml", ".yml"]
         for ext in possible_exts:
             full_path = f"{file_path}{ext}"
             if os.path.isfile(full_path):
                 return Config.fromfile(full_path)
-            #如果路径不指向文件，则尝试在路径后添加可能的扩展名（.py, .yaml, .yml），并检查是否存在文件
+            # 如果路径不指向文件，则尝试在路径后添加可能的扩展名（.py, .yaml, .yml），并检查是否存在文件
 
         if os.path.isdir(file_path):
             default_files = ["config.py", "config.yaml", "config.yml"]
@@ -138,7 +142,7 @@ def default_config_parser(file_path, options):
                 full_path = os.path.join(file_path, fname)
                 if os.path.isfile(full_path):
                     return Config.fromfile(full_path)
-         #如果路径指向一个目录，则尝试在目录中查找默认的配置文件（如 config.py, config.yaml, config.yml）
+        # 如果路径指向一个目录，则尝试在目录中查找默认的配置文件（如 config.py, config.yaml, config.yml）
 
         raise FileNotFoundError(
             f"绝对路径配置不存在（需检查路径/扩展名）:\n"
@@ -146,20 +150,19 @@ def default_config_parser(file_path, options):
             f"尝试补充扩展名: {[f'{file_path}{ext}' for ext in possible_exts]}"
         )
 
-
     if "/" not in file_path:
         raise ValueError(f"协议路径需为 dataset/model-exp，实际输入: {file_path}")
-    #如果路径中不包含 /，则认为输入的路径格式不符合协议要求（dataset/model-exp），并抛出一个 ValueError
+    # 如果路径中不包含 /，则认为输入的路径格式不符合协议要求（dataset/model-exp），并抛出一个 ValueError
 
     dataset, model_exp = file_path.split("/", 1)
-    #数据集名称 模型名称
+    # 数据集名称 模型名称
     config_path = os.path.join("configs", dataset, f"{model_exp}.py")
-    #构造配置文件路径为 configs/dataset/model_exp.py
+    # 构造配置文件路径为 configs/dataset/model_exp.py
     print(config_path)
 
     if not os.path.isfile(config_path):
         raise FileNotFoundError(f"协议路径配置文件不存在: {config_path}")
-    #检查构造的配置文件路径是否存在
+    # 检查构造的配置文件路径是否存在
     return Config.fromfile(config_path)
 
     if options is not None:
@@ -169,10 +172,10 @@ def default_config_parser(file_path, options):
         cfg.seed = get_random_seed()
 
     cfg.data.train.loop = cfg.epoch // cfg.eval_epoch
-    #计算训练数据的循环次数，并将其赋值给 cfg.data.train.loop
+    # 计算训练数据的循环次数，并将其赋值给 cfg.data.train.loop
 
     os.makedirs(os.path.join(cfg.save_path, "model"), exist_ok=True)
-    #确保保存路径下的 model 子目录存在。如果目录不存在，则创建它。exist_ok=True 表示如果目录已存在，不会抛出错误
+    # 确保保存路径下的 model 子目录存在。如果目录不存在，则创建它。exist_ok=True 表示如果目录已存在，不会抛出错误
     if not cfg.resume:
         cfg.dump(os.path.join(cfg.save_path, "config.py"))
     return cfg
@@ -181,16 +184,16 @@ def default_config_parser(file_path, options):
 def default_setup(cfg):
     # scalar by world size
     world_size = comm.get_world_size()
-    #获取当前集群的"世界大小"（即参与计算的节点或GPU的数量，表示为 world_size）。
+    # 获取当前集群的"世界大小"（即参与计算的节点或GPU的数量，表示为 world_size）。
     cfg.num_worker = cfg.num_worker if cfg.num_worker is not None else mp.cpu_count()
-    #如果用户没有为 num_worker 设置值，则根据机器的CPU核心数（mp.cpu_count()）来设置线程数。num_worker 通常用于指定数据加载的工作线程数。
+    # 如果用户没有为 num_worker 设置值，则根据机器的CPU核心数（mp.cpu_count()）来设置线程数。num_worker 通常用于指定数据加载的工作线程数。
     cfg.num_worker_per_gpu = cfg.num_worker // world_size
-    #将总线程数（num_worker）平均分配到每个 GPU 上。在多GPU环境中，每个 GPU 都需要独立的数据加载线程，因此需要根据 world_size 来计算每个 GPU 的线程数
+    # 将总线程数（num_worker）平均分配到每个 GPU 上。在多GPU环境中，每个 GPU 都需要独立的数据加载线程，因此需要根据 world_size 来计算每个 GPU 的线程数
     assert cfg.batch_size % world_size == 0
-    #确保批量大小（batch_size）必须能够被 world_size 整除
+    # 确保批量大小（batch_size）必须能够被 world_size 整除
     assert cfg.batch_size_val is None or cfg.batch_size_val % world_size == 0
     assert cfg.batch_size_test is None or cfg.batch_size_test % world_size == 0
-    #如果 batch_size_val 和 batch_size_test 值不为 None，则检查它们是否也能被 world_size 整除
+    # 如果 batch_size_val 和 batch_size_test 值不为 None，则检查它们是否也能被 world_size 整除
     cfg.batch_size_per_gpu = cfg.batch_size // world_size
     cfg.batch_size_val_per_gpu = (
         cfg.batch_size_val // world_size if cfg.batch_size_val is not None else 1
@@ -198,14 +201,14 @@ def default_setup(cfg):
     cfg.batch_size_test_per_gpu = (
         cfg.batch_size_test // world_size if cfg.batch_size_test is not None else 1
     )
-    #计算每个 GPU 上的批量大小（batch_size_per_gpu）、验证批量大小（batch_size_val_per_gpu）和测试批量大小（batch_size_test_per_gpu）。
+    # 计算每个 GPU 上的批量大小（batch_size_per_gpu）、验证批量大小（batch_size_val_per_gpu）和测试批量大小（batch_size_test_per_gpu）。
     # #如果原始的批量大小未设置，则默认为每个 GPU 处理 1 个样本。
     # update data loop
     assert cfg.epoch % cfg.eval_epoch == 0
-    #确保训练周期（cfg.epoch）能够被评估周期（cfg.eval_epoch）整除。这是为了确保在训练过程中，评估操作可以在合适的间隔点触发。
+    # 确保训练周期（cfg.epoch）能够被评估周期（cfg.eval_epoch）整除。这是为了确保在训练过程中，评估操作可以在合适的间隔点触发。
     # settle random seed
     rank = comm.get_rank()
     seed = None if cfg.seed is None else cfg.seed * cfg.num_worker_per_gpu + rank
-    #根据配置文件中的种子值（cfg.seed）和当前的秩（rank）计算一个随机种子
+    # 根据配置文件中的种子值（cfg.seed）和当前的秩（rank）计算一个随机种子
     set_seed(seed)
     return cfg

@@ -38,22 +38,18 @@ class RPE(torch.nn.Module):
 
     def forward(self, coord):
         idx = (
-            coord.clamp(-self.pos_bnd, self.pos_bnd)  
-            + self.pos_bnd 
-            + torch.arange(3, device=coord.device) * self.rpe_num 
+            coord.clamp(-self.pos_bnd, self.pos_bnd)
+            + self.pos_bnd
+            + torch.arange(3, device=coord.device) * self.rpe_num
         )
         max_idx = self.rpe_table.size(0) - 1
-        idx = idx.clamp(0, max_idx)  
-        idx = idx.to(self.rpe_table.device)  
+        idx = idx.clamp(0, max_idx)
+        idx = idx.to(self.rpe_table.device)
 
         out = self.rpe_table.index_select(0, idx.reshape(-1))
         out = out.view(idx.shape + (-1,)).sum(3)
         out = out.permute(0, 3, 1, 2)  # (N, K, K, H) -> (N, H, K, K)
         return out
-
- 
-
-
 
 
 class SerializedAttention(PointModule):
@@ -108,7 +104,6 @@ class SerializedAttention(PointModule):
         self.proj_drop = torch.nn.Dropout(proj_drop)
         self.softmax = torch.nn.Softmax(dim=-1)
         self.rpe = RPE(patch_size, num_heads) if self.enable_rpe else None
-
 
     @torch.no_grad()
     def get_rel_pos(self, point, order):
@@ -178,11 +173,9 @@ class SerializedAttention(PointModule):
             )
         return point[pad_key], point[unpad_key], point[cu_seqlens_key]
 
-
-
     def forward(self, point):
         if not self.enable_flash:
- 
+
             self.patch_size = min(
                 offset2bincount(point.offset).min().tolist(), self.patch_size_max
             )
@@ -195,7 +188,6 @@ class SerializedAttention(PointModule):
         order = point.serialized_order[self.order_index][pad]
         index_tensor = point.serialized_inverse[self.order_index].to(unpad.device)
         inverse = unpad[index_tensor]
-
 
         qkv = self.qkv(point.feat)[order]
         if not self.enable_flash:
@@ -530,7 +522,6 @@ class Embedding(PointModule):
 
 
 @MODELS.register_module("PT-v3m1")
-
 class PointTransformerV3(PointModule):
     def __init__(
         self,
@@ -690,8 +681,6 @@ class PointTransformerV3(PointModule):
                             num_heads=dec_num_head[s],
                             patch_size=dec_patch_size[s],
                             mlp_ratio=mlp_ratio,
-
-
                             qkv_bias=qkv_bias,
                             qk_scale=qk_scale,
                             attn_drop=attn_drop,

@@ -30,7 +30,7 @@ class DefaultDataset(Dataset):
         "segment",
         "instance",
         "pose",
-        "comblined"
+        "comblined",
     ]
 
     def __init__(

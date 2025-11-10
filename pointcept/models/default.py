@@ -33,14 +33,14 @@ class DefaultSegmentor(nn.Module):
 
 
 @MODELS.register_module()
-#用于实现点云分割任务的模型
+# 用于实现点云分割任务的模型
 class DefaultSegmentorV2(nn.Module):
     def __init__(
         self,
         num_classes,
-            #num_classes：目标分割的类别数量
+        # num_classes：目标分割的类别数量
         backbone_out_channels,
-            #backbone_out_channels：主干网络（backbone）输出的特征通道数
+        # backbone_out_channels：主干网络（backbone）输出的特征通道数
         backbone=None,
         criteria=None,
     ):
@@ -50,29 +50,28 @@ class DefaultSegmentorV2(nn.Module):
             if num_classes > 0
             else nn.Identity()
         )
-        #如果 num_classes > 0，则初始化一个线性层（nn.Linear），将主干网络的输出特征映射到类别数量的分割 logits。
+        # 如果 num_classes > 0，则初始化一个线性层（nn.Linear），将主干网络的输出特征映射到类别数量的分割 logits。
         self.backbone = build_model(backbone)
         self.criteria = build_criteria(criteria)
-
 
     def forward(self, input_dict):
         point = Point(input_dict)
         print("point.feat0:", point.feat.shape)
-    #将输入数据封装为一个 Point 类型的对象。Point 类可能是一个自定义类，用于表示点云数据及其相关特征。
+        # 将输入数据封装为一个 Point 类型的对象。Point 类可能是一个自定义类，用于表示点云数据及其相关特征。
         point = self.backbone(point)
-    #主干网络（Backbone），负责提取输入数据的特征 主干网络的输出可能是一个 Point 对象或特征张量
+        # 主干网络（Backbone），负责提取输入数据的特征 主干网络的输出可能是一个 Point 对象或特征张量
         # Backbone added after v1.5.0 return Point instead of feat and use DefaultSegmentorV2
         # TODO: remove this part after make all backbone return Point only.
         if isinstance(point, Point):
-        #检查主干网络的输出是否为 Point 类型。
+            # 检查主干网络的输出是否为 Point 类型。
             feat = point.feat
-        #如果是 Point 类型，则提取其 feat 属性作为特征张量。
+        # 如果是 Point 类型，则提取其 feat 属性作为特征张量。
         else:
             feat = point
-            #如果不是 Point 类型，则直接将主干网络的输出作为特征张量
+            # 如果不是 Point 类型，则直接将主干网络的输出作为特征张量
         seg_logits = self.seg_head(feat)
-        #分割头（Segmentation Head），负责将特征张量转换为分割 logits。
-        #seg_logits 是分割头的输出，表示每个点属于不同类别的预测分数
+        # 分割头（Segmentation Head），负责将特征张量转换为分割 logits。
+        # seg_logits 是分割头的输出，表示每个点属于不同类别的预测分数
 
         # train
         if self.training:

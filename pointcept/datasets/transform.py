@@ -46,12 +46,12 @@ class Collect(object):
         for name, keys in self.kwargs.items():
             name = name.replace("_keys", "")
             assert isinstance(keys, Sequence)
-          #  data[name] = torch.cat([data_dict[key].float() for key in keys], dim=1)
+        #  data[name] = torch.cat([data_dict[key].float() for key in keys], dim=1)
         # 修改 transform.py 第49行附近逻辑
-        data[name] = torch.cat([
-            data_dict[key].float() for key in keys
-            if key in data_dict  # 新增保护条件
-        ], dim=1)
+        data[name] = torch.cat(
+            [data_dict[key].float() for key in keys if key in data_dict],  # 新增保护条件
+            dim=1,
+        )
 
         return data
 
@@ -853,8 +853,10 @@ class GridSample(object):
                 #     )
                 # data_dict["displacement"] = displacement[idx_unique]
             if self.project_displacement:
-                    # 若需保留投影功能但无需法线，需重写逻辑（此处假设直接禁用投影）
-                raise ValueError("project_displacement requires normal field. Disable this flag.")
+                # 若需保留投影功能但无需法线，需重写逻辑（此处假设直接禁用投影）
+                raise ValueError(
+                    "project_displacement requires normal field. Disable this flag."
+                )
             # for key in self.keys:
             #     data_dict[key] = data_dict[key][idx_unique]
             for key in self.keys:

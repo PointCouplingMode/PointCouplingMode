@@ -31,7 +31,6 @@ from pointcept.utils.misc import (
 TESTERS = Registry("testers")
 
 
-
 class TesterBase:
     def __init__(self, cfg, model=None, test_loader=None, verbose=False) -> None:
         torch.multiprocessing.set_sharing_strategy("file_system")
@@ -57,12 +56,12 @@ class TesterBase:
             self.test_loader = test_loader
 
     def build_model(self):
-        #构建模型并加载权重。
+        # 构建模型并加载权重。
         model = build_model(self.cfg.model)
-        #调用 build_model 函数（通常是一个工具函数），根据配置 self.cfg.model 构建模型。
+        # 调用 build_model 函数（通常是一个工具函数），根据配置 self.cfg.model 构建模型。
         n_parameters = sum(p.numel() for p in model.parameters() if p.requires_grad)
         self.logger.info(f"Num params: {n_parameters}")
-        #计算模型中可训练参数的数量，并记录到日志中。
+        # 计算模型中可训练参数的数量，并记录到日志中。
         model = create_ddp_model(
             model.cuda(),
             broadcast_buffers=False,
@@ -73,17 +72,20 @@ class TesterBase:
         # broadcast_buffers = False：不广播缓冲区。
         # find_unused_parameters = self.cfg.find_unused_parameters：根据配置决定是否查找未使用的参数。
         if self.cfg.weight is None:
-            raise ValueError("self.cfg.weight is None. Please ensure the weight path is correctly set in the config.")
+            raise ValueError(
+                "self.cfg.weight is None. Please ensure the weight path is correctly set in the config."
+            )
 
         if not isinstance(self.cfg.weight, (str, bytes, os.PathLike)):
             raise TypeError(
-                f"self.cfg.weight should be a string, bytes, or os.PathLike, but got {type(self.cfg.weight)}")
+                f"self.cfg.weight should be a string, bytes, or os.PathLike, but got {type(self.cfg.weight)}"
+            )
 
         if os.path.isfile(self.cfg.weight):
-            #检查权重文件是否存在    加载权重
+            # 检查权重文件是否存在    加载权重
             self.logger.info(f"Loading weight at: {self.cfg.weight}")
-            checkpoint = torch.load(self.cfg.weight,weights_only=False)
-            #此处已修改
+            checkpoint = torch.load(self.cfg.weight, weights_only=False)
+            # 此处已修改
             weight = OrderedDict()
             for key, value in checkpoint["state_dict"].items():
                 if key.startswith("module."):
@@ -94,7 +96,7 @@ class TesterBase:
                         key = "module." + key  # xxx.xxx -> module.xxx.xxx
                 weight[key] = value
             model.load_state_dict(weight, strict=True)
-            #使用 model.load_state_dict 加载权重。
+            # 使用 model.load_state_dict 加载权重。
             self.logger.info(
                 "=> Loaded weight '{}' (epoch {})".format(
                     self.cfg.weight, checkpoint["epoch"]
@@ -105,9 +107,9 @@ class TesterBase:
         return model
 
     def build_test_loader(self):
-        #构建测试数据加载器
+        # 构建测试数据加载器
         test_dataset = build_dataset(self.cfg.data.test)
-        #调用 build_dataset 函数（通常是一个工具函数），根据配置构建测试数据集
+        # 调用 build_dataset 函数（通常是一个工具函数），根据配置构建测试数据集
         if comm.get_world_size() > 1:
             test_sampler = torch.utils.data.distributed.DistributedSampler(test_dataset)
         else:
@@ -365,6 +367,7 @@ class TesterBase:
 #                 )
 #             logger.info("<<<<<<<<<<<<<<<<< End Evaluation <<<<<<<<<<<<<<<<<")
 
+
 class SemSegTester(TesterBase):
     # 你的 collate_fn 定义在这里，但由于在类外也需要，我们暂时放在外面确保可用。
     # 实际项目中，如果 collate_fn 复杂，它可能在一个专门的文件中。
@@ -387,13 +390,13 @@ class SemSegTester(TesterBase):
         make_dirs(save_path)
         # create submit folder only on main process
         if (
-                self.cfg.data.test.type == "ScanNetDataset"
-                or self.cfg.data.test.type == "ScanNet200Dataset"
-                or self.cfg.data.test.type == "ScanNetPPDataset"
+            self.cfg.data.test.type == "ScanNetDataset"
+            or self.cfg.data.test.type == "ScanNet200Dataset"
+            or self.cfg.data.test.type == "ScanNetPPDataset"
         ) and comm.is_main_process():
             make_dirs(os.path.join(save_path, "submit"))
         elif (
-                self.cfg.data.test.type == "SemanticKITTIDataset" and comm.is_main_process()
+            self.cfg.data.test.type == "SemanticKITTIDataset" and comm.is_main_process()
         ):
             make_dirs(os.path.join(save_path, "submit"))
         elif self.cfg.data.test.type == "NuScenesDataset" and comm.is_main_process():
@@ -411,7 +414,7 @@ class SemSegTester(TesterBase):
                 )
             )
             with open(
-                    os.path.join(save_path, "submit", "test", "submission.json"), "w"
+                os.path.join(save_path, "submit", "test", "submission.json"), "w"
             ) as f:
                 json.dump(submission, f, indent=4)
         comm.synchronize()
@@ -426,7 +429,8 @@ class SemSegTester(TesterBase):
 
             # !!! DEBUG POINT 1: 原始加载的 segment 形状
             print(
-                f"DEBUG_SHAPE [{data_name}]: [1] Original segment shape from DataLoader: {segment.shape}, dtype: {segment.dtype}")
+                f"DEBUG_SHAPE [{data_name}]: [1] Original segment shape from DataLoader: {segment.shape}, dtype: {segment.dtype}"
+            )
 
             pred_save_path = os.path.join(save_path, "{}_pred.npy".format(data_name))
             if os.path.isfile(pred_save_path):
@@ -439,16 +443,21 @@ class SemSegTester(TesterBase):
                 if "origin_segment" in data_dict.keys():
                     segment = data_dict["origin_segment"]  # <-- segment 可能在这里被替换
                 # !!! DEBUG POINT 2a: 如果从文件加载 pred
-                print(f"DEBUG_SHAPE [{data_name}]: [2a] Pred loaded from file: {pred.shape}, dtype: {pred.dtype}")
                 print(
-                    f"DEBUG_SHAPE [{data_name}]: [2a] Segment (after potential origin_segment): {segment.shape}, dtype: {segment.dtype}")
+                    f"DEBUG_SHAPE [{data_name}]: [2a] Pred loaded from file: {pred.shape}, dtype: {pred.dtype}"
+                )
+                print(
+                    f"DEBUG_SHAPE [{data_name}]: [2a] Segment (after potential origin_segment): {segment.shape}, dtype: {segment.dtype}"
+                )
 
             else:
                 # pred 初始化 (num_points, num_classes)
                 # segment.size 是原始点云的总点数，用于初始化 pred 矩阵
                 # 所以这里的 segment.size 应该和最终的 pred.shape[0] 匹配
                 pred = torch.zeros((segment.size, self.cfg.data.num_classes)).cuda()
-                print(f"DEBUG_SHAPE [{data_name}]: [2b] Initial pred (zeros) shape based on segment.size: {pred.shape}")
+                print(
+                    f"DEBUG_SHAPE [{data_name}]: [2b] Initial pred (zeros) shape based on segment.size: {pred.shape}"
+                )
 
                 for i in range(len(fragment_list)):
                     fragment_batch_size = 1  # 因为是 fragment 推理，通常是 1
@@ -460,9 +469,12 @@ class SemSegTester(TesterBase):
                     # !!! DEBUG POINT 2b.1: input_dict["index"] 的形状
                     if "index" in input_dict:
                         print(
-                            f"DEBUG_SHAPE [{data_name}] fragment {i}: input_dict['index'] shape: {input_dict['index'].shape}, max index: {input_dict['index'].max()}")
+                            f"DEBUG_SHAPE [{data_name}] fragment {i}: input_dict['index'] shape: {input_dict['index'].shape}, max index: {input_dict['index'].max()}"
+                        )
                     else:
-                        print(f"DEBUG_SHAPE [{data_name}] fragment {i}: input_dict does not contain 'index'")
+                        print(
+                            f"DEBUG_SHAPE [{data_name}] fragment {i}: input_dict does not contain 'index'"
+                        )
 
                     for key in input_dict.keys():
                         if isinstance(input_dict[key], torch.Tensor):
@@ -472,7 +484,8 @@ class SemSegTester(TesterBase):
                         pred_part = self.model(input_dict)["seg_logits"]  # (n, k)
                         # !!! DEBUG POINT 2b.2: 模型输出的 pred_part 形状
                         print(
-                            f"DEBUG_SHAPE [{data_name}] fragment {i}/{len(fragment_list)}: Model output pred_part (seg_logits) shape: {pred_part.shape}")
+                            f"DEBUG_SHAPE [{data_name}] fragment {i}/{len(fragment_list)}: Model output pred_part (seg_logits) shape: {pred_part.shape}"
+                        )
 
                         pred_part = F.softmax(pred_part, -1)
                         if self.cfg.empty_cache:
@@ -482,7 +495,8 @@ class SemSegTester(TesterBase):
                             # pred[idx_part[bs:be], :] += pred_part[bs:be] # 累加到 pred 中
                             # !!! DEBUG POINT 2b.3: 累加到 pred 之前的 pred_part 片段形状
                             print(
-                                f"DEBUG_SHAPE [{data_name}] fragment {i} pred_part slice shape (bs:{bs}, be:{be}): {pred_part[bs:be].shape}")
+                                f"DEBUG_SHAPE [{data_name}] fragment {i} pred_part slice shape (bs:{bs}, be:{be}): {pred_part[bs:be].shape}"
+                            )
 
                             # !!! 检查这里是否会超出 pred 的索引范围，或者导致写入的位置不正确
                             # print(f"DEBUG_SHAPE [{data_name}] fragment {i} idx_part slice shape (bs:{bs}, be:{be}): {idx_part[bs:be].shape}, max_idx: {idx_part[bs:be].max()}")
@@ -507,7 +521,8 @@ class SemSegTester(TesterBase):
 
                 # !!! DEBUG POINT 3: 最终的 pred 形状 (即将进入 intersection_and_union)
                 print(
-                    f"DEBUG_SHAPE [{data_name}]: [3] Final pred shape after argmax/topk: {pred.shape}, dtype: {pred.dtype}")
+                    f"DEBUG_SHAPE [{data_name}]: [3] Final pred shape after argmax/topk: {pred.shape}, dtype: {pred.dtype}"
+                )
 
                 if "origin_segment" in data_dict.keys():
                     assert "inverse" in data_dict.keys()
@@ -515,9 +530,11 @@ class SemSegTester(TesterBase):
                     segment = data_dict["origin_segment"]  # <-- segment 可能在这里被替换
                     # !!! DEBUG POINT 4: 经过 origin_segment/inverse 调整后的 pred 和 segment 形状
                     print(
-                        f"DEBUG_SHAPE [{data_name}]: [4] Pred AFTER origin_segment/inverse adjustment: {pred.shape}, dtype: {pred.dtype}")
+                        f"DEBUG_SHAPE [{data_name}]: [4] Pred AFTER origin_segment/inverse adjustment: {pred.shape}, dtype: {pred.dtype}"
+                    )
                     print(
-                        f"DEBUG_SHAPE [{data_name}]: [4] Segment AFTER origin_segment/inverse adjustment: {segment.shape}, dtype: {segment.dtype}")
+                        f"DEBUG_SHAPE [{data_name}]: [4] Segment AFTER origin_segment/inverse adjustment: {segment.shape}, dtype: {segment.dtype}"
+                    )
 
                 np.save(pred_save_path, pred)  # 保存最终的 pred
 
@@ -525,9 +542,11 @@ class SemSegTester(TesterBase):
 
             # !!! DEBUG POINT 5: 最终要传递给 intersection_and_union 的形状
             print(
-                f"DEBUG_SHAPE [{data_name}]: [5] FINAL SHAPE for intersection_and_union - 'pred': {pred.shape}, dtype: {pred.dtype}")
+                f"DEBUG_SHAPE [{data_name}]: [5] FINAL SHAPE for intersection_and_union - 'pred': {pred.shape}, dtype: {pred.dtype}"
+            )
             print(
-                f"DEBUG_SHAPE [{data_name}]: [5] FINAL SHAPE for intersection_and_union - 'segment': {segment.shape}, dtype: {segment.dtype}")
+                f"DEBUG_SHAPE [{data_name}]: [5] FINAL SHAPE for intersection_and_union - 'segment': {segment.shape}, dtype: {segment.dtype}"
+            )
 
             intersection, union, target = intersection_and_union(
                 pred, segment, self.cfg.data.num_classes, self.cfg.data.ignore_index
@@ -608,6 +627,7 @@ class SemSegTester(TesterBase):
                     )
                 )
             logger.info("<<<<<<<<<<<<<<<<< End Evaluation <<<<<<<<<<<<<<<<<")
+
     @staticmethod
     def collate_fn(batch):
         return batch

@@ -13,6 +13,7 @@ import torch
 import matplotlib.pyplot as plt
 import numpy as np
 
+
 def visualize_point_cloud(point_cloud, labels):
     # 将点云和标签转换为NumPy数组
     point_cloud = np.array(point_cloud)
@@ -20,16 +21,24 @@ def visualize_point_cloud(point_cloud, labels):
 
     # 创建一个3D散点图
     fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
+    ax = fig.add_subplot(111, projection="3d")
 
     # 使用标签作为颜色
-    scatter = ax.scatter(point_cloud[:, 0], point_cloud[:, 1], point_cloud[:, 2], c=labels, cmap='viridis')
+    scatter = ax.scatter(
+        point_cloud[:, 0],
+        point_cloud[:, 1],
+        point_cloud[:, 2],
+        c=labels,
+        cmap="viridis",
+    )
 
     # 添加颜色条
     plt.colorbar(scatter)
 
     # 显示图形
     plt.show()
+
+
 def to_numpy(x):
     if isinstance(x, torch.Tensor):
         x = x.clone().detach().cpu().numpy()

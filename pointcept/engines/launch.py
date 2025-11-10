@@ -87,7 +87,9 @@ def launch(
         )
     else:
         main_func(*cfg)
- #       main_func(cfg)
+
+
+#       main_func(cfg)
 
 
 def _distributed_worker(

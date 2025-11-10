@@ -331,7 +331,7 @@ class Config:
         return b
 
     @staticmethod
-    #定义了一个名为 fromfile 的函数，用于从文件加载配置并解析为一个配置对象
+    # 定义了一个名为 fromfile 的函数，用于从文件加载配置并解析为一个配置对象
     def fromfile(filename, use_predefined_variables=True, import_custom_modules=True):
         cfg_dict, cfg_text = Config._file2dict(filename, use_predefined_variables)
         if import_custom_modules and cfg_dict.get("custom_imports", None):

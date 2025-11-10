@@ -120,8 +120,8 @@ def parse_room(
     room_colors = np.ascontiguousarray(np.vstack(room_colors))
     room_semantic_gt = np.ascontiguousarray(np.vstack(room_semantic_gt))
     room_instance_gt = np.ascontiguousarray(np.vstack(room_instance_gt))
-    comblined_data = np.hstack((coords,colors))
-    np.save(os.path.join(save_path,"comblined.npy"),comblined_data.astype(np.float32))
+    comblined_data = np.hstack((coords, colors))
+    np.save(os.path.join(save_path, "comblined.npy"), comblined_data.astype(np.float32))
     np.save(os.path.join(save_path, "coord.npy"), room_coords.astype(np.float32))
     np.save(os.path.join(save_path, "color.npy"), room_colors.astype(np.uint8))
     np.save(os.path.join(save_path, "segment.npy"), room_semantic_gt.astype(np.int16))
@@ -163,7 +163,6 @@ def main_process():
         "--num_workers", default=1, type=int, help="Num workers for preprocessing."
     )
     args = parser.parse_args()
-
 
     if args.parse_normal:
         assert args.raw_root is not None

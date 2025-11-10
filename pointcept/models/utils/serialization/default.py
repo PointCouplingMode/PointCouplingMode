@@ -20,11 +20,10 @@ def encode(grid_coord, batch=None, depth=16, order="z"):
         raise NotImplementedError
     if batch is not None:
         batch = batch.long()
-      #  code = batch << depth * 3 | code
-        depth_tensor = torch.tensor(depth * 3, dtype=torch.int64,
-                                    device='cuda:0')
-        epth_tensor = depth_tensor.to('cuda:0')  # 确保depth_tensor在CUDA
-        code = code.to('cuda:0')  # 显式转移code到CUDA
+        #  code = batch << depth * 3 | code
+        depth_tensor = torch.tensor(depth * 3, dtype=torch.int64, device="cuda:0")
+        epth_tensor = depth_tensor.to("cuda:0")  # 确保depth_tensor在CUDA
+        code = code.to("cuda:0")  # 显式转移code到CUDA
         code = batch.to(torch.int64).cuda() << depth_tensor | code
     return code
 

@@ -45,6 +45,7 @@ class MambaBlock(nn.Module):
             return x
         return feat
 
+
 class RPE(torch.nn.Module):
     def __init__(self, patch_size, num_heads):
         super().__init__()
@@ -55,13 +56,11 @@ class RPE(torch.nn.Module):
         self.rpe_table = torch.nn.Parameter(torch.zeros(3 * self.rpe_num, num_heads))
         torch.nn.init.trunc_normal_(self.rpe_table, std=0.02)
 
-
     def forward(self, coord):
-        coord = coord.clone() 
-        coord.clamp_(-self.pos_bnd, self.pos_bnd)  
-        idx = coord + self.pos_bnd 
-        idx += torch.arange(3,
-                            device=coord.device) * self.rpe_num  
+        coord = coord.clone()
+        coord.clamp_(-self.pos_bnd, self.pos_bnd)
+        idx = coord + self.pos_bnd
+        idx += torch.arange(3, device=coord.device) * self.rpe_num
 
         max_idx = self.rpe_table.size(0) - 1
         idx = idx.clamp(0, max_idx).to(self.rpe_table.device)
@@ -70,13 +69,11 @@ class RPE(torch.nn.Module):
         return out
 
 
-
 class GSG(nn.Module):
     def __init__(self, channels):
         super().__init__()
         self.channels = channels
         self.B = nn.Linear(channels, channels)
-
 
         self.Delta = nn.Parameter(torch.randn(1, channels))
         self.norm = nn.LayerNorm(channels)
@@ -85,9 +82,8 @@ class GSG(nn.Module):
             nn.Linear(channels, channels),
             nn.Tanh(),
             nn.Linear(channels, 1),
-            nn.Sigmoid()
+            nn.Sigmoid(),
         )
-
 
         self.weight_matrix = nn.Parameter(torch.randn(channels, channels))
 
@@ -96,7 +92,7 @@ class GSG(nn.Module):
 
         Delta = self.Delta.expand(feat.shape[0], -1)
 
-        attention_weights = self.attention(feat) 
+        attention_weights = self.attention(feat)
 
         weighted_B = B * attention_weights
         weighted_Delta = Delta * (1 - attention_weights)
@@ -107,9 +103,6 @@ class GSG(nn.Module):
         updated_feat = self.norm(updated_feat)
 
         return updated_feat
-
-
-
 
 
 class SerializedAttention(PointModule):
@@ -166,9 +159,7 @@ class SerializedAttention(PointModule):
         self.softmax = torch.nn.Softmax(dim=-1)
         self.rpe = RPE(patch_size, num_heads) if self.enable_rpe else None
 
-
     @torch.no_grad()
-
     def get_rel_pos(self, point, order):
         K = self.patch_size
         rel_pos_key = f"rel_pos_{self.order_index}"
@@ -236,7 +227,6 @@ class SerializedAttention(PointModule):
             )
         return point[pad_key], point[unpad_key], point[cu_seqlens_key]
 
-
     def forward(self, point):
         if not self.enable_flash:
             self.patch_size = min(
@@ -284,8 +274,7 @@ class SerializedAttention(PointModule):
         feat1_ordered = self.PGRM(feat0_ordered)
         feat0 = feat1_ordered[point.serialized_inverse[self.order_index]]
 
-
-        feat = feat1+feat0
+        feat = feat1 + feat0
 
         feat = self.proj(feat)
         feat = self.proj_drop(feat)
@@ -296,24 +285,24 @@ class SerializedAttention(PointModule):
 
 class Block(PointModule):
     def __init__(
-            self,
-            channels,
-            num_heads,
-            patch_size=48,
-            qkv_bias=True,
-            qk_scale=None,
-            attn_drop=0.0,
-            proj_drop=0.0,
-            drop_path=0.0,
-            norm_layer=nn.LayerNorm,
-            act_layer=nn.GELU,
-            pre_norm=True,
-            order_index=0,
-            ssc_indice_key=None,
-            enable_rpe=False,
-            enable_flash=True,
-            upcast_attention=True,
-            upcast_softmax=True,
+        self,
+        channels,
+        num_heads,
+        patch_size=48,
+        qkv_bias=True,
+        qk_scale=None,
+        attn_drop=0.0,
+        proj_drop=0.0,
+        drop_path=0.0,
+        norm_layer=nn.LayerNorm,
+        act_layer=nn.GELU,
+        pre_norm=True,
+        order_index=0,
+        ssc_indice_key=None,
+        enable_rpe=False,
+        enable_flash=True,
+        upcast_attention=True,
+        upcast_softmax=True,
     ):
         super().__init__()
         self.channels = channels
@@ -328,8 +317,6 @@ class Block(PointModule):
                 bias=True,
                 indice_key=ssc_indice_key,
             ),
-
-
             nn.Linear(channels, channels),
             norm_layer(channels),
         )
@@ -389,15 +376,15 @@ class Block(PointModule):
 
 class SerializedPooling(PointModule):
     def __init__(
-            self,
-            in_channels,
-            out_channels,
-            stride=2,
-            norm_layer=None,
-            act_layer=None,
-            reduce="max",
-            shuffle_orders=True,
-            traceable=True,  # record parent and cluster
+        self,
+        in_channels,
+        out_channels,
+        stride=2,
+        norm_layer=None,
+        act_layer=None,
+        reduce="max",
+        shuffle_orders=True,
+        traceable=True,  # record parent and cluster
     ):
         super().__init__()
         self.in_channels = in_channels
@@ -495,13 +482,13 @@ class SerializedPooling(PointModule):
 
 class SerializedUnpooling(PointModule):
     def __init__(
-            self,
-            in_channels,
-            skip_channels,
-            out_channels,
-            norm_layer=None,
-            act_layer=None,
-            traceable=False,  # record parent and cluster
+        self,
+        in_channels,
+        skip_channels,
+        out_channels,
+        norm_layer=None,
+        act_layer=None,
+        traceable=False,  # record parent and cluster
     ):
         super().__init__()
         self.proj = PointSequential(nn.Linear(in_channels, out_channels))
@@ -533,11 +520,11 @@ class SerializedUnpooling(PointModule):
 
 class Embedding(PointModule):
     def __init__(
-            self,
-            in_channels,
-            embed_channels,
-            norm_layer=None,
-            act_layer=None,
+        self,
+        in_channels,
+        embed_channels,
+        norm_layer=None,
+        act_layer=None,
     ):
         super().__init__()
         self.in_channels = in_channels
@@ -567,36 +554,36 @@ class Embedding(PointModule):
 @MODELS.register_module("coupling_Model")
 class PointCouplingModel(PointModule):
     def __init__(
-            self,
-            in_channels=6,
-            order=("z", "z-trans"),
-            stride=(2, 2, 2, 2),
-            enc_depths=(2, 2, 2, 6, 2),
-            enc_channels=(32, 64, 128, 256, 512),
-            enc_num_head=(2, 4, 8, 16, 32),
-            enc_patch_size=(48, 48, 48, 48, 48),
-            dec_depths=(2, 2, 2, 2),
-            dec_channels=(64, 64, 128, 256),
-            dec_num_head=(4, 4, 8, 16),
-            dec_patch_size=(48, 48, 48, 48),
-            qkv_bias=True,
-            qk_scale=None,
-            attn_drop=0.0,
-            proj_drop=0.0,
-            drop_path=0.3,
-            pre_norm=True,
-            shuffle_orders=True,
-            enable_rpe=False,
-            enable_flash=True,
-            upcast_attention=False,
-            upcast_softmax=False,
-            cls_mode=False,
-            pdnorm_bn=False,
-            pdnorm_ln=False,
-            pdnorm_decouple=True,
-            pdnorm_adaptive=False,
-            pdnorm_affine=True,
-            pdnorm_conditions=("ScanNet", "S3DIS", "Structured3D"),
+        self,
+        in_channels=6,
+        order=("z", "z-trans"),
+        stride=(2, 2, 2, 2),
+        enc_depths=(2, 2, 2, 6, 2),
+        enc_channels=(32, 64, 128, 256, 512),
+        enc_num_head=(2, 4, 8, 16, 32),
+        enc_patch_size=(48, 48, 48, 48, 48),
+        dec_depths=(2, 2, 2, 2),
+        dec_channels=(64, 64, 128, 256),
+        dec_num_head=(4, 4, 8, 16),
+        dec_patch_size=(48, 48, 48, 48),
+        qkv_bias=True,
+        qk_scale=None,
+        attn_drop=0.0,
+        proj_drop=0.0,
+        drop_path=0.3,
+        pre_norm=True,
+        shuffle_orders=True,
+        enable_rpe=False,
+        enable_flash=True,
+        upcast_attention=False,
+        upcast_softmax=False,
+        cls_mode=False,
+        pdnorm_bn=False,
+        pdnorm_ln=False,
+        pdnorm_decouple=True,
+        pdnorm_adaptive=False,
+        pdnorm_affine=True,
+        pdnorm_conditions=("ScanNet", "S3DIS", "Structured3D"),
     ):
         super().__init__()
         self.num_stages = len(enc_depths)
@@ -654,8 +641,8 @@ class PointCouplingModel(PointModule):
         self.enc = PointSequential()
         for s in range(self.num_stages):
             enc_drop_path_ = enc_drop_path[
-                             sum(enc_depths[:s]): sum(enc_depths[: s + 1])
-                             ]
+                sum(enc_depths[:s]) : sum(enc_depths[: s + 1])
+            ]
             enc = PointSequential()
             if s > 0:
                 enc.add(
@@ -703,8 +690,8 @@ class PointCouplingModel(PointModule):
             dec_channels = list(dec_channels) + [enc_channels[-1]]
             for s in reversed(range(self.num_stages - 1)):
                 dec_drop_path_ = dec_drop_path[
-                                 sum(dec_depths[:s]): sum(dec_depths[: s + 1])
-                                 ]
+                    sum(dec_depths[:s]) : sum(dec_depths[: s + 1])
+                ]
                 dec_drop_path_.reverse()
                 dec = PointSequential()
                 dec.add(
@@ -758,7 +745,3 @@ class PointCouplingModel(PointModule):
         #         reduce="mean",
         #     )
         return point
-
-
-
-

@@ -1,11 +1,11 @@
 _base_ = ["../_base_/default_runtime.py"]
 
 # misc custom setting
-batch_size = 2  
+batch_size = 2
 num_worker = 1
 mix_prob = 0.8
 empty_cache = True
-enable_amp =False
+enable_amp = False
 weight = ""
 
 # model settings
@@ -132,10 +132,9 @@ data = dict(
                 type="Collect",
                 keys=("coord", "grid_coord", "segment"),
                 feat_keys=("color", "normal"),
-               ),
+            ),
         ],
         test_mode=False,
-
     ),
     val=dict(
         type=dataset_type,

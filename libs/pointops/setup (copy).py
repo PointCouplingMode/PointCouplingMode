@@ -3,9 +3,9 @@ from setuptools import setup
 from torch.utils.cpp_extension import BuildExtension, CUDAExtension
 from distutils.sysconfig import get_config_vars
 
-include_dirs = [os.path.realpath('/usr/local/cuda-12.4/targets/x86_64-linux/include')]
+include_dirs = [os.path.realpath("/usr/local/cuda-12.4/targets/x86_64-linux/include")]
 
-#/cuda-12.4/targets/x86_64-linux/include/cuda_runtime_api.h
+# /cuda-12.4/targets/x86_64-linux/include/cuda_runtime_api.h
 
 
 (opt,) = get_config_vars("OPT")
@@ -27,9 +27,8 @@ setup(
     install_requires=["torch", "numpy"],
     packages=["pointops"],
     package_dir={"pointops": "functions"},
-    include_dirs=include_dirs, #添加这一行！！！！
+    include_dirs=include_dirs,  # 添加这一行！！！！
     ext_modules=[
-
         CUDAExtension(
             name="pointops._C",
             sources=sources,

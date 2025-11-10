@@ -59,10 +59,10 @@ class PointSequential(PointModule):
         for k, module in self._modules.items():
             # Point module
             if isinstance(module, PointModule):
-                #检查当前子模块是否是 PointModule 类型。
+                # 检查当前子模块是否是 PointModule 类型。
                 # PointModule 是一个自定义模块类，可能用于处理点云数据
                 input = module(input)
-                #将输入数据传递给 PointModule，并获取处理后的输出。
+                # 将输入数据传递给 PointModule，并获取处理后的输出。
             # Spconv module
             elif spconv.modules.is_spconv_module(module):
                 if isinstance(input, Point):

@@ -37,8 +37,12 @@ class AverageMeter(object):
 
 def intersection_and_union(output, target, K, ignore_index=-1):
     # 'K' classes, output and target sizes are N or N * L or N * H * W, each value in range 0 to K - 1.
-    print(f"DEBUG: In intersection_and_union - Output shape: {output.shape}, dtype: {output.dtype}")
-    print(f"DEBUG: In intersection_and_union - Target shape: {target.shape}, dtype: {target.dtype}")
+    print(
+        f"DEBUG: In intersection_and_union - Output shape: {output.shape}, dtype: {output.dtype}"
+    )
+    print(
+        f"DEBUG: In intersection_and_union - Target shape: {target.shape}, dtype: {target.dtype}"
+    )
     assert output.ndim in [1, 2, 3]
     assert output.shape == target.shape
     output = output.reshape(output.size).copy()

@@ -1,13 +1,12 @@
-
 _base_ = ["../_base_/default_runtime.py"]
 
-batch_size = 2 
+batch_size = 2
 num_worker = 1
 mix_prob = 0.8
 empty_cache = True
 empty_cache_per_epoch = True
-enable_amp = False 
-weight=  "" 
+enable_amp = False
+weight = ""
 # model settings
 model = dict(
     type="DefaultSegmentorV2",
@@ -21,7 +20,7 @@ model = dict(
         enc_depths=(2, 2, 2, 6, 2),
         enc_channels=(32, 64, 128, 256, 512),
         enc_num_head=(2, 4, 8, 16, 32),
-        enc_patch_size=(48, 48, 48, 48, 48), 
+        enc_patch_size=(48, 48, 48, 48, 48),
         dec_depths=(2, 2, 2, 2),
         dec_channels=(64, 64, 128, 256),
         dec_num_head=(4, 4, 8, 16),
@@ -44,7 +43,6 @@ model = dict(
         pdnorm_adaptive=False,
         pdnorm_affine=True,
         pdnorm_conditions=("ScanNet", "S3DIS", "Structured3D"),
-
     ),
     criteria=[
         dict(type="CrossEntropyLoss", loss_weight=1.0, ignore_index=-1),
@@ -82,13 +80,12 @@ data = dict(
         "window",
         "door",
         "table",
-         "chair",
+        "chair",
         "sofa",
         "bookcase",
         "board",
         "clutter",
     ],
-
     train=dict(
         type=dataset_type,
         split=("Area_1", "Area_2", "Area_3", "Area_4", "Area_6"),
@@ -126,7 +123,6 @@ data = dict(
             ),
         ],
         test_mode=False,
-
     ),
     val=dict(
         type=dataset_type,
@@ -145,9 +141,8 @@ data = dict(
                 mode="train",
                 return_grid_coord=True,
             ),
-
-            dict(type="CenterShift", apply_z=False),  
-            dict(type="NormalizeColor"),    
+            dict(type="CenterShift", apply_z=False),
+            dict(type="NormalizeColor"),
             dict(type="ToTensor"),
             dict(
                 type="Collect",
